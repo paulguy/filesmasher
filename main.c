@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
 
 	srandom(time(NULL));
 	lastupdate = 0;
-	totalarea = ranges[nranges - 1]->totalend;
+	totalarea = ranges[nranges - 1]->totalend + 1;
 	for(il = 0; il < amount; il++) {
 		bits = 62;
 		randpos = random();
