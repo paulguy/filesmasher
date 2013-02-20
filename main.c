@@ -97,7 +97,7 @@ int main(int argc, char **argv) {
 	for(i = 32; i > 0; i--) {
 		if((randtest & RAND_MAX) == randtest) {
 			randbits = i;
-			printf("srandom found to be %d bits.\n", randbits);
+			printf("random found to be %d bits.\n", randbits);
 			break;
 		}
 		randtest /= 16;
@@ -122,9 +122,15 @@ int main(int argc, char **argv) {
 			}
 		}
 
-		lseek64(outfile, randpos, SEEK_SET);
+		if(lseek64(outfile, randpos, SEEK_SET) < 0) {
+			perror("lseek64");
+			return(-1);
+		}
 		randval = (char)(random() & 255);
-		write(outfile, &randval, 1);
+		if(write(outfile, &randval, 1) < 0) {
+			perror("write");
+			return(-1);
+		}
 		if(time(NULL) > lastupdate) {
 			printf("\r%li/%li", il + 1, amount);
 			fflush(stdout);
