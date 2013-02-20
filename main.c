@@ -82,6 +82,8 @@ int main(int argc, char **argv) {
 		nranges = 1;
 		ranges[0]->start = 0;
 		ranges[0]->end = filesize - 1;
+		ranges[0]->totalstart = 0;
+		ranges[0]->totalend = filesize - 1;
 	}
 
 	printf("Filename: %s (%ld bytes)\n", argv[1], filesize);
