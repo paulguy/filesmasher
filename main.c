@@ -5,8 +5,10 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <time.h>
+#include <stdint.h>
 
 #include "range.h"
+#include "arand.h"
 
 int main(int argc, char **argv) {
 	int outfile;
@@ -15,9 +17,8 @@ int main(int argc, char **argv) {
 	off64_t filesize, randpos, totalarea;
 	int i, j;
 	long amount, il;
-	unsigned int randtest;
-	int randbits, bits;
-	unsigned char randval;
+	int32_t randbits;
+	uint8_t randval;
 	time_t lastupdate;
 
 	if(argc < 3) {
@@ -93,27 +94,13 @@ int main(int argc, char **argv) {
 		printf("%d. %ld-%ld, %ld-%ld\n", i, ranges[i]->start, ranges[i]->end, ranges[i]->totalstart, ranges[i]->totalend);
 	}
 
-	randtest = 0xFFFFFFFF;
-	for(i = 32; i > 0; i--) {
-		if((randtest & RAND_MAX) == randtest) {
-			randbits = i;
-			printf("random found to be %d bits.\n", randbits);
-			break;
-		}
-		randtest /= 16;
-	}
+	randbits = arand_init(time(NULL));
+	printf("random found to be %d bits.\n", randbits);
 
-	srandom(time(NULL));
 	lastupdate = 0;
 	totalarea = ranges[nranges - 1]->totalend + 1;
 	for(il = 0; il < amount; il++) {
-		bits = 62;
-		randpos = random();
-		bits -= randbits;
-		while(bits > 0) {
-			randpos |= random() << (62 - bits);
-			bits -= randbits;
-		}
+		arand_random64((uint64_t *)&randpos, 63);
 		randpos %= totalarea;
 		for(i = 0; i < nranges; i++) {
 			if(randpos > ranges[i]->totalstart && randpos < ranges[i]->totalend) {
@@ -121,12 +108,12 @@ int main(int argc, char **argv) {
 				break;
 			}
 		}
+		arand_random8(&randval, 8);
 
 		if(lseek64(outfile, randpos, SEEK_SET) < 0) {
 			perror("lseek64");
 			return(-1);
 		}
-		randval = (char)(random() & 255);
 		if(write(outfile, &randval, 1) < 0) {
 			perror("write");
 			return(-1);
@@ -136,6 +123,7 @@ int main(int argc, char **argv) {
 			fflush(stdout);
 			lastupdate = time(NULL);
 		}
+
 	}
 	printf("\r%li/%li\n", il, amount);
 
